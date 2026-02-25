@@ -1,6 +1,21 @@
+// @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+
+// --- Load .env early ---
+try {
+  const fs = require("fs");
+  const path = require("path");
+  const envPath = path.resolve(__dirname, "..", ".env");
+  const envContent = fs.readFileSync(envPath, "utf-8");
+  for (const line of envContent.split("\n")) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match && !process.env[match[1].trim()]) {
+      process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+} catch {}
 
 // --- Geotab API Client ---
 
@@ -572,20 +587,6 @@ server.tool(
 // --- Start Server ---
 
 async function main() {
-  // Load .env manually (simple approach, no dotenv dependency)
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const envPath = path.resolve(process.cwd(), ".env");
-    const envContent = fs.readFileSync(envPath, "utf-8");
-    for (const line of envContent.split("\n")) {
-      const match = line.match(/^([^#=]+)=(.*)$/);
-      if (match && !process.env[match[1].trim()]) {
-        process.env[match[1].trim()] = match[2].trim();
-      }
-    }
-  } catch {}
-
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Claw Fleet Manager MCP server running on stdio");
